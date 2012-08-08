@@ -18,6 +18,8 @@
 Base utilities to build API operation managers and objects on top of.
 """
 
+import urllib
+
 from keystoneclient import exceptions
 
 
@@ -139,6 +141,79 @@ class ManagerWithFind(Manager):
         return found
 
 
+class CrudManager(Manager):
+    """Base manager class for manipulating Keystone entities."""
+    parent_manager = None
+    key = None
+    collection_key = None
+
+    def build_url(self, **kwargs):
+        url = '/%(collection_key)s' % {
+                'collection_key': self.collection_key,
+            }
+
+        # do we have a specific entity?
+        entity_id = getid(kwargs.get(self.key))
+        if entity_id is not None:
+            url = '%(url)s/%(entity_id)s' % {
+                'url': url,
+                'entity_id': entity_id,
+            }
+
+        return url
+
+    def _base_url(self, **kwargs):
+        if self.parent_manager:
+            return self.parent_manager.build_url(**kwargs)
+        else:
+            raise NotImplemented('I failed to think this through.')
+
+    def _filter_kwargs(self, kwargs):
+        # drop null values
+        for key, value in kwargs.copy().iteritems():
+            if value is None:
+                kwargs.pop(key)
+        return kwargs
+
+    def create(self, **kwargs):
+        return self._create(
+            self.get_url(),
+            {self.key: kwargs},
+            self.key)
+
+    def get(self, entity):
+        return self._get(
+            self.get_url(**{self.key: entity}),
+            self.key)
+
+    def list(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+
+        query = ''
+        if kwargs:
+            query = '?' + urllib.urlencode(kwargs)
+
+        return self._list('%(base_url)s%(query)s' % {
+                'base_url': self.get_url(),
+                'query': query,
+            },
+            self.collection_key)
+
+    def update(self, entity, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+
+        kwargs['id'] = entity
+
+        return self._create(
+            self.get_url(**{self.key: entity}),
+            {self.key: kwargs},
+            self.key)
+
+    def delete(self, entity):
+        return self._delete(
+            self.get_url(**{self.key: entity}))
+
+
 class Resource(object):
     """
     A resource represents a particular instance of an object (tenant, user,
@@ -184,6 +259,9 @@ class Resource(object):
         new = self.manager.get(self.id)
         if new:
             self._add_details(new._info)
+
+    def delete(self):
+        return self.manager.delete(self)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
