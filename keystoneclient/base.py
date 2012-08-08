@@ -18,6 +18,8 @@
 Base utilities to build API operation managers and objects on top of.
 """
 
+import urllib
+
 from keystoneclient import exceptions
 
 
@@ -37,7 +39,7 @@ def getid(obj):
 
     # Try to return the object's UUID first, if we have a UUID.
     try:
-        if obj.uuid:
+        if hasattr(obj, 'uuid'):
             return obj.uuid
     except AttributeError:
         pass
@@ -76,20 +78,25 @@ class Manager(object):
 
     def _get(self, url, response_key):
         resp, body = self.api.get(url)
-        return self.resource_class(self, body[response_key])
+        return self.resource_class(self, body[response_key], loaded=True)
+
+    def _head(self, url):
+        resp, body = self.api.head(url)
+        return resp.status == 204
 
     def _create(self, url, body, response_key, return_raw=False):
         resp, body = self.api.post(url, body=body)
         if return_raw:
             return body[response_key]
-        return self.resource_class(self, body[response_key])
+        return self.resource_class(self, body[response_key], loaded=True)
 
     def _delete(self, url):
         resp, body = self.api.delete(url)
 
-    def _update(self, url, body, response_key=None, method="PUT"):
+    def _update(self, url, body=None, response_key=None, method="PUT"):
         methods = {"PUT": self.api.put,
-                   "POST": self.api.post}
+                   "POST": self.api.post,
+                   "PATCH": self.api.patch}
         try:
             resp, body = methods[method](url, body=body)
         except KeyError:
@@ -97,7 +104,7 @@ class Manager(object):
                                              % method)
         # PUT requests may not return a body
         if body:
-            return self.resource_class(self, body[response_key])
+            return self.resource_class(self, body[response_key], loaded=True)
 
 
 class ManagerWithFind(Manager):
@@ -137,6 +144,88 @@ class ManagerWithFind(Manager):
                 continue
 
         return found
+
+
+class CrudManager(Manager):
+    """Base manager class for manipulating Keystone entities."""
+    parent_manager = None
+    collection_key = None
+    key = None
+
+    def build_url(self, base_url=None, **kwargs):
+        url = base_url if base_url is not None else ''
+
+        url += '/%s' % self.collection_key
+
+        # do we have a specific entity?
+        entity_id = kwargs.get('%s_id' % self.key)
+        if entity_id is not None:
+            url += '/%s' % entity_id
+
+        return url
+
+    def _filter_kwargs(self, kwargs):
+        # drop null values
+        for key, ref in kwargs.copy().iteritems():
+            if ref is None:
+                kwargs.pop(key)
+            else:
+                id_value = getid(ref)
+                if id_value != ref:
+                    kwargs.pop(key)
+                    kwargs['%s_id' % key] = id_value
+        return kwargs
+
+    def create(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+        return self._create(
+            self.build_url(**kwargs),
+            {self.key: kwargs},
+            self.key)
+
+    def get(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+        return self._get(
+            self.build_url(**kwargs),
+            self.key)
+
+    def head(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+        return self._head(self.build_url(**kwargs))
+
+    def list(self, base_url=None, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+
+        return self._list(
+            '%(base_url)s%(query)s' % {
+                'base_url': self.build_url(base_url=base_url, **kwargs),
+                'query': '?%s' % urllib.urlencode(kwargs) if kwargs else '',
+            },
+            self.collection_key)
+
+    def put(self, base_url=None, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+
+        return self._update(
+            self.build_url(base_url=base_url, **kwargs),
+            method='PUT')
+
+    def update(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+        params = kwargs.copy()
+        params.pop('%s_id' % self.key)
+
+        return self._update(
+            self.build_url(**kwargs),
+            {self.key: params},
+            self.key,
+            method='PATCH')
+
+    def delete(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+
+        return self._delete(
+            self.build_url(**kwargs))
 
 
 class Resource(object):
@@ -184,6 +273,9 @@ class Resource(object):
         new = self.manager.get(self.id)
         if new:
             self._add_details(new._info)
+
+    def delete(self):
+        return self.manager.delete(self)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
