@@ -24,19 +24,26 @@ class PolicyTests(utils.TestCase):
                 {
                     'id': '1',
                     'endpoint_id': '2',
-                    'policy': '{"default": true}',
+                    'blob': '{"default": true}',
                     'type': 'application/json',
                 },
                 {
                     'id': '3',
                     'endpoint_id': '4',
-                    'policy': '{"default": false}',
+                    'blob': '{"default": false}',
                     'type': 'application/json',
                 }
             ],
         }
 
     def test_create(self):
+        """This test is failing.
+
+        Without sort_keys=True applied to both keystoneclient.client and the
+        rest of test suite, json.dumps makes no guarantee as to the order of
+        keys in the request/response bodies.
+        """
+
         req = self.TEST_POLICIES['policies'][0].copy()
         del req['id']
         resp = httplib2.Response({
@@ -54,27 +61,13 @@ class PolicyTests(utils.TestCase):
 
         policy = self.client.policies.create(
             endpoint=req['endpoint_id'],
-            policy=req['policy'],
+            blob=req['blob'],
             type=req['type'])
         self.assertTrue(isinstance(policy, policies.Policy))
         self.assertEqual(policy.id, self.TEST_POLICIES['policies'][0]['id'])
         self.assertEqual(policy.endpoint_id, req['endpoint_id'])
-        self.assertEqual(policy.policy, req['policy'])
+        self.assertEqual(policy.blob, req['blob'])
         self.assertEqual(policy.type, req['type'])
-
-    def test_delete(self):
-        resp = httplib2.Response({
-            'status': 200,
-            'body': '',
-        })
-        httplib2.Http.request(urlparse.urljoin(self.TEST_URL,
-                              'v3/policies/1'),
-                              'DELETE',
-                              headers=self.TEST_REQUEST_HEADERS) \
-            .AndReturn((resp, resp['body']))
-        self.mox.ReplayAll()
-
-        self.client.policies.delete('1')
 
     def test_get(self):
         ref = self.TEST_POLICIES['policies'][0]
@@ -91,11 +84,11 @@ class PolicyTests(utils.TestCase):
             .AndReturn((resp, resp['body']))
         self.mox.ReplayAll()
 
-        policy = self.client.policies.get(ref['id'])
+        policy = self.client.policies.get(policy=ref['id'])
         self.assertTrue(isinstance(policy, policies.Policy))
         self.assertEqual(policy.id, ref['id'])
         self.assertEqual(policy.endpoint_id, ref['endpoint_id'])
-        self.assertEqual(policy.policy, ref['policy'])
+        self.assertEqual(policy.blob, ref['blob'])
         self.assertEqual(policy.type, ref['type'])
 
     def test_list(self):
@@ -132,3 +125,17 @@ class PolicyTests(utils.TestCase):
 
         policy_list = self.client.policies.list(endpoint=endpoint_id)
         [self.assertTrue(isinstance(r, policies.Policy)) for r in policy_list]
+
+    def test_delete(self):
+        resp = httplib2.Response({
+            'status': 200,
+            'body': '',
+        })
+        httplib2.Http.request(urlparse.urljoin(self.TEST_URL,
+                              'v3/policies/1'),
+                              'DELETE',
+                              headers=self.TEST_REQUEST_HEADERS) \
+            .AndReturn((resp, resp['body']))
+        self.mox.ReplayAll()
+
+        self.client.policies.delete(policy='1')

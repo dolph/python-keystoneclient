@@ -30,5 +30,30 @@ class Endpoint(base.Resource):
 class EndpointManager(base.CrudManager):
     """Manager class for manipulating Identity endpoints."""
     resource_class = Endpoint
-    key = 'endpoint'
     collection_key = 'endpoints'
+    key = 'endpoint'
+
+    def create(self, service, url, name=None, interface=None, region=None):
+        return super(EndpointManager, self).create(
+            service_id=base.getid(service),
+            name=name,
+            interface=interface,
+            url=url,
+            region=region)
+
+    def get(self, endpoint):
+        return super(EndpointManager, self).get(
+            endpoint_id=base.getid(endpoint))
+
+    def update(self, endpoint, service=None, name=None, interface=None,
+            region=None):
+        return super(EndpointManager, self).update(
+            endpoint=endpoint,
+            service_id=base.getid(service),
+            name=name,
+            interface=interface,
+            region=region)
+
+    def delete(self, endpoint):
+        return super(EndpointManager, self).delete(
+            endpoint_id=base.getid(endpoint))

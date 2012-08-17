@@ -22,6 +22,7 @@ class Service(base.Resource):
 
     Attributes:
         * id: a uuid that identifies the service
+        * type: compute, identity, etc
 
     """
     pass
@@ -30,5 +31,24 @@ class Service(base.Resource):
 class ServiceManager(base.CrudManager):
     """Manager class for manipulating Identity services."""
     resource_class = Service
-    key = 'service'
     collection_key = 'services'
+    key = 'service'
+
+    def create(self, type, **kwargs):
+        return super(ServiceManager, self).create(
+            type=type,
+            **kwargs)
+
+    def get(self, service):
+        return super(ServiceManager, self).get(
+            service_id=base.getid(service))
+
+    def update(self, service, type=None, **kwargs):
+        return super(ServiceManager, self).update(
+            service_id=base.getid(service),
+            type=type,
+            **kwargs)
+
+    def delete(self, service):
+        return super(ServiceManager, self).delete(
+            service_id=base.getid(service))

@@ -23,14 +23,14 @@ class Policy(base.Resource):
     Attributes:
         * id: a uuid that identifies the policy
         * endpoint_id: references the endpoint the policy applies to
-        * policy: a policy document (blob)
+        * blob: a policy document (blob)
         * type: the mime type of the policy blob
 
     """
-    def update(self, endpoint=None, policy=None, type=None):
+    def update(self, endpoint=None, blob=None, type=None):
         kwargs = {
             'endpoint_id': base.getid(endpoint) if endpoint is not None else self.endpoint_id,
-            'policy': policy if policy is not None else self.policy,
+            'blob': blob if blob is not None else self.blob,
             'type': type if type is not None else self.type,
         }
 
@@ -46,22 +46,30 @@ class Policy(base.Resource):
 class PolicyManager(base.CrudManager):
     """Manager class for manipulating Identity policies."""
     resource_class = Policy
-    key = 'policy'
     collection_key = 'policies'
+    key = 'policy'
 
-    def create(self, endpoint, policy, type='application/json'):
+    def create(self, endpoint, blob, type='application/json'):
         return super(PolicyManager, self).create(
             endpoint_id=base.getid(endpoint),
-            policy=policy,
+            blob=blob,
             type=type)
+
+    def get(self, policy):
+        return super(PolicyManager, self).get(
+            policy_id=base.getid(policy))
 
     def list(self, endpoint=None):
         return super(PolicyManager, self).list(
             endpoint_id=base.getid(endpoint))
 
-    def update(self, entity, endpoint=None, policy=None, type=None):
+    def update(self, entity, endpoint=None, blob=None, type=None):
         return super(PolicyManager, self).update(
-            entity=entity,
+            policy_id=base.getid(entity),
             endpoint_id=base.getid(endpoint),
-            policy=policy,
+            blob=blob,
             type=type)
+
+    def delete(self, policy):
+        return super(PolicyManager, self).delete(
+            policy_id=base.getid(policy))

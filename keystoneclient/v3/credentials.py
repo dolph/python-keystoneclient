@@ -30,5 +30,28 @@ class Credential(base.Resource):
 class CredentialManager(base.CrudManager):
     """Manager class for manipulating Identity credentials."""
     resource_class = Credential
-    key = 'credential'
     collection_key = 'credentials'
+    key = 'credential'
+
+    def create(self, user, type, data, project=None):
+        return super(CredentialManager, self).create(
+            user_id=base.getid(user),
+            type=type,
+            data=data,
+            project_id=base.getid(project))
+
+    def get(self, credential):
+        return super(CredentialManager, self).get(
+            credential_id=base.getid(credential))
+
+    def update(self, credential, user, type=None, data=None, project=None):
+        return super(CredentialManager, self).update(
+            credential_id=base.getid(credential),
+            user_id=base.getid(user),
+            type=type,
+            data=data,
+            project_id=base.getid(project))
+
+    def delete(self, credential):
+        return super(CredentialManager, self).delete(
+            credential_id=base.getid(credential))

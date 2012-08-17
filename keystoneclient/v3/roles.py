@@ -22,6 +22,7 @@ class Role(base.Resource):
 
     Attributes:
         * id: a uuid that identifies the role
+        * name: user-facing identifier
 
     """
     pass
@@ -30,5 +31,22 @@ class Role(base.Resource):
 class RoleManager(base.CrudManager):
     """Manager class for manipulating Identity roles."""
     resource_class = Role
-    key = 'role'
     collection_key = 'roles'
+    key = 'role'
+
+    def create(self, name):
+        return super(RoleManager, self).create(
+            name=name)
+
+    def get(self, role):
+        return super(RoleManager, self).get(
+            role_id=base.getid(role))
+
+    def update(self, role, name=None):
+        return super(RoleManager, self).update(
+            role_id=base.getid(role),
+            name=name)
+
+    def delete(self, role):
+        return super(RoleManager, self).delete(
+            role_id=base.getid(role))

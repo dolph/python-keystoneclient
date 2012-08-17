@@ -30,5 +30,26 @@ class Domain(base.Resource):
 class DomainManager(base.CrudManager):
     """Manager class for manipulating Identity domains."""
     resource_class = Domain
-    key = 'domain'
     collection_key = 'domains'
+    key = 'domain'
+
+    def create(self, name, description=None, enabled=True):
+        return super(DomainManager, self).create(
+            name=name,
+            description=description,
+            enabled=enabled)
+
+    def get(self, domain):
+        return super(DomainManager, self).get(
+            domain_id=base.getid(domain))
+
+    def update(self, domain, name=None, description=None, enabled=None):
+        return super(DomainManager, self).update(
+            domain_id=base.getid(domain),
+            name=name,
+            description=description,
+            enabled=enabled)
+
+    def delete(self, domain):
+        return super(DomainManager, self).delete(
+            domain_id=base.getid(domain))

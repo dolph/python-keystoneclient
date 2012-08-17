@@ -46,18 +46,33 @@ class Project(base.Resource):
 class ProjectManager(base.CrudManager):
     """Manager class for manipulating Identity projects."""
     resource_class = Project
-    key = 'project'
     collection_key = 'projects'
+    key = 'project'
 
-    def create(self, name, description=None, enabled=True):
-        return super(ProjectManager).create(
+    def create(self, name, domain=None, description=None, enabled=True):
+        return super(ProjectManager, self).create(
+            domain_id=base.getid(domain),
             name=name,
             description=description,
             enabled=enabled)
 
-    def update(self, project, name=None, description=None, enabled=None):
-        return super(ProjectManager).update(
-            entity=project,
+    def list(self, domain=None):
+        return super(ProjectManager, self).list(
+            domain_id=base.getid(domain))
+
+    def get(self, project):
+        return super(ProjectManager, self).get(
+            project_id=base.getid(project))
+
+    def update(self, project, name=None, domain=None, description=None,
+            enabled=None):
+        return super(ProjectManager, self).update(
+            project_id=base.getid(project),
+            domain_id=base.getid(domain),
             name=name,
             description=description,
             enabled=enabled)
+
+    def delete(self, project):
+        return super(ProjectManager, self).delete(
+            project_id=base.getid(project))

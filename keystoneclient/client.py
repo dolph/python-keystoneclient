@@ -107,6 +107,7 @@ class HTTPClient(httplib2.Http):
         Wrapper around httplib2.Http.request to handle tasks such as
         setting headers, JSON encoding/decoding, and error handling.
         """
+        print method, url
         # Copy the kwargs so we can reuse the original in case of redirects
         request_kwargs = copy.copy(kwargs)
         request_kwargs.setdefault('headers', kwargs.get('headers', {}))
@@ -175,6 +176,9 @@ class HTTPClient(httplib2.Http):
 
     def put(self, url, **kwargs):
         return self._cs_request(url, 'PUT', **kwargs)
+
+    def patch(self, url, **kwargs):
+        return self._cs_request(url, 'PATCH', **kwargs)
 
     def delete(self, url, **kwargs):
         return self._cs_request(url, 'DELETE', **kwargs)

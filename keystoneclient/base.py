@@ -39,7 +39,7 @@ def getid(obj):
 
     # Try to return the object's UUID first, if we have a UUID.
     try:
-        if obj.uuid:
+        if hasattr(obj, 'uuid'):
             return obj.uuid
     except AttributeError:
         pass
@@ -91,7 +91,8 @@ class Manager(object):
 
     def _update(self, url, body, response_key=None, method="PUT"):
         methods = {"PUT": self.api.put,
-                   "POST": self.api.post}
+                   "POST": self.api.post,
+                   "PATCH": self.api.patch}
         try:
             resp, body = methods[method](url, body=body)
         except KeyError:
@@ -144,46 +145,42 @@ class ManagerWithFind(Manager):
 class CrudManager(Manager):
     """Base manager class for manipulating Keystone entities."""
     parent_manager = None
-    key = None
     collection_key = None
+    key = None
 
     def build_url(self, **kwargs):
-        url = '/%(collection_key)s' % {
-                'collection_key': self.collection_key,
-            }
+        url = '/%s' % self.collection_key
 
         # do we have a specific entity?
-        entity_id = getid(kwargs.get(self.key))
+        entity_id = kwargs.get('%s_id' % self.key)
         if entity_id is not None:
-            url = '%(url)s/%(entity_id)s' % {
-                'url': url,
-                'entity_id': entity_id,
-            }
+            url += '/%s' % entity_id
 
         return url
 
-    def _base_url(self, **kwargs):
-        if self.parent_manager:
-            return self.parent_manager.build_url(**kwargs)
-        else:
-            raise NotImplemented('I failed to think this through.')
-
     def _filter_kwargs(self, kwargs):
         # drop null values
-        for key, value in kwargs.copy().iteritems():
-            if value is None:
+        for key, ref in kwargs.copy().iteritems():
+            if ref is None:
                 kwargs.pop(key)
+            else:
+                id_value = getid(ref)
+                if id_value != ref:
+                    kwargs.pop(key)
+                    kwargs['%s_id' % key] = id_value
         return kwargs
 
     def create(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
         return self._create(
-            self.get_url(),
+            self.build_url(**kwargs),
             {self.key: kwargs},
             self.key)
 
-    def get(self, entity):
+    def get(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
         return self._get(
-            self.get_url(**{self.key: entity}),
+            self.build_url(**kwargs),
             self.key)
 
     def list(self, **kwargs):
@@ -194,24 +191,27 @@ class CrudManager(Manager):
             query = '?' + urllib.urlencode(kwargs)
 
         return self._list('%(base_url)s%(query)s' % {
-                'base_url': self.get_url(),
+                'base_url': self.build_url(**kwargs),
                 'query': query,
             },
             self.collection_key)
 
-    def update(self, entity, **kwargs):
+    def update(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+        params = kwargs.copy()
+        params.pop('%s_id' % self.key)
+
+        return self._update(
+            self.build_url(**kwargs),
+            {self.key: params},
+            self.key,
+            method='PATCH')
+
+    def delete(self, **kwargs):
         kwargs = self._filter_kwargs(kwargs)
 
-        kwargs['id'] = entity
-
-        return self._create(
-            self.get_url(**{self.key: entity}),
-            {self.key: kwargs},
-            self.key)
-
-    def delete(self, entity):
         return self._delete(
-            self.get_url(**{self.key: entity}))
+            self.build_url(**kwargs))
 
 
 class Resource(object):
