@@ -45,13 +45,14 @@ class EndpointManager(base.CrudManager):
         return super(EndpointManager, self).get(
             endpoint_id=base.getid(endpoint))
 
-    def update(self, endpoint, service=None, name=None, interface=None,
-            region=None):
+    def update(self, endpoint, service=None, url=None, name=None,
+            interface=None, region=None):
         return super(EndpointManager, self).update(
-            endpoint=endpoint,
+            endpoint_id=endpoint,
             service_id=base.getid(service),
             name=name,
             interface=interface,
+            url=url,
             region=region)
 
     def delete(self, endpoint):
