@@ -101,6 +101,9 @@ class HTTPClient(httplib2.Http):
             _logger.debug("REQ BODY: %s\n" % (kwargs['body']))
         _logger.debug("RESP: %s\nRESP BODY: %s\n", resp, body)
 
+    def serialize(self, entity):
+        return json.dumps(entity)
+
     def request(self, url, method, **kwargs):
         """ Send an http request with the specified characteristics.
 
@@ -114,7 +117,7 @@ class HTTPClient(httplib2.Http):
         request_kwargs['headers']['User-Agent'] = self.USER_AGENT
         if 'body' in kwargs:
             request_kwargs['headers']['Content-Type'] = 'application/json'
-            request_kwargs['body'] = json.dumps(kwargs['body'])
+            request_kwargs['body'] = self.serialize(kwargs['body'])
 
         resp, body = super(HTTPClient, self).request(url,
                                                      method,

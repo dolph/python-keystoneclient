@@ -12,6 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import json
 import logging
 
 from keystoneclient.v2_0 import client
@@ -81,3 +82,6 @@ class Client(client.Client):
             self.authenticate()
         else:
             self.management_url = endpoint
+
+    def serialize(self, entity):
+        return json.dumps(entity, sort_keys=True)
