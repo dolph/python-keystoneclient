@@ -148,17 +148,15 @@ class CrudManager(Manager):
     collection_key = None
     key = None
 
-    def build_url(self, sub_collection_key=None, **kwargs):
-        url = '/%s' % self.collection_key
+    def build_url(self, base_url=None, **kwargs):
+        url = base_url if base_url is not None else ''
+
+        url += '/%s' % self.collection_key
 
         # do we have a specific entity?
         entity_id = kwargs.get('%s_id' % self.key)
         if entity_id is not None:
             url += '/%s' % entity_id
-
-        # is this a sub-collection? e.g. GET /users/{user_id}/projects
-        if sub_collection_key:
-            url += '/%s' % sub_collection_key
 
         return url
 
@@ -187,17 +185,14 @@ class CrudManager(Manager):
             self.build_url(**kwargs),
             self.key)
 
-    def list(self, **kwargs):
+    def list(self, base_url=None, **kwargs):
         kwargs = self._filter_kwargs(kwargs)
-        params = kwargs.copy()
-        params.pop('%s_id' % self.key, None)
-        collection_key = params.pop('sub_collection_key', self.collection_key)
 
         return self._list('%(base_url)s%(query)s' % {
-                'base_url': self.build_url(**kwargs),
-                'query': '?' + urllib.urlencode(params) if params else '',
+                'base_url': self.build_url(base_url=base_url, **kwargs),
+                'query': '?' + urllib.urlencode(**kwargs) if kwargs else '',
             },
-            collection_key)
+            self.collection_key)
 
     def update(self, **kwargs):
         kwargs = self._filter_kwargs(kwargs)
