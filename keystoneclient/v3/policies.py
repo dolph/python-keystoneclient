@@ -29,7 +29,9 @@ class Policy(base.Resource):
     """
     def update(self, endpoint=None, blob=None, type=None):
         kwargs = {
-            'endpoint_id': base.getid(endpoint) if endpoint is not None else self.endpoint_id,
+            'endpoint_id': (base.getid(endpoint)
+                            if endpoint is not None
+                            else self.endpoint_id),
             'blob': blob if blob is not None else self.blob,
             'type': type if type is not None else self.type,
         }

@@ -30,7 +30,9 @@ class Project(base.Resource):
     def update(self, name=None, description=None, enabled=None):
         kwargs = {
             'name': name if name is not None else self.name,
-            'description': description if description is not None else self.description,
+            'description': (description
+                            if description is not None
+                            else self.description),
             'enabled': enabled if enabled is not None else self.enabled,
         }
 
@@ -65,7 +67,7 @@ class ProjectManager(base.CrudManager):
             project_id=base.getid(project))
 
     def update(self, project, name=None, domain=None, description=None,
-            enabled=None):
+               enabled=None):
         return super(ProjectManager, self).update(
             project_id=base.getid(project),
             domain_id=base.getid(domain),

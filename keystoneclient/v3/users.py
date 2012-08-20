@@ -33,8 +33,8 @@ class UserManager(base.CrudManager):
     collection_key = 'users'
     key = 'user'
 
-    def create(self, name, domain=None, project=None, password=None, email=None,
-            description=None, enabled=True):
+    def create(self, name, domain=None, project=None, password=None,
+               email=None, description=None, enabled=True):
         return super(UserManager, self).create(
             name=name,
             domain_id=base.getid(domain),
@@ -54,7 +54,7 @@ class UserManager(base.CrudManager):
             user_id=base.getid(user))
 
     def update(self, user, name=None, domain=None, project=None, password=None,
-            email=None, description=None, enabled=None):
+               email=None, description=None, enabled=None):
         return super(UserManager, self).update(
             user_id=base.getid(user),
             name=name,

@@ -174,7 +174,9 @@ class CrudTests(object):
         returned = self.manager.create(**parameterize(req_ref))
         self.assertTrue(isinstance(returned, self.model))
         for attr in ref:
-            self.assertEqual(getattr(returned, attr), ref[attr],
+            self.assertEqual(
+                getattr(returned, attr),
+                ref[attr],
                 'Expected different %s' % attr)
 
     def test_get(self):
@@ -196,7 +198,9 @@ class CrudTests(object):
         returned = self.manager.get(ref['id'])
         self.assertTrue(isinstance(returned, self.model))
         for attr in ref:
-            self.assertEqual(getattr(returned, attr), ref[attr],
+            self.assertEqual(
+                getattr(returned, attr),
+                ref[attr],
                 'Expected different %s' % attr)
 
     def test_list(self):
@@ -245,7 +249,9 @@ class CrudTests(object):
         returned = self.manager.update(ref['id'], **parameterize(req_ref))
         self.assertTrue(isinstance(returned, self.model))
         for attr in ref:
-            self.assertEqual(getattr(returned, attr), ref[attr],
+            self.assertEqual(
+                getattr(returned, attr),
+                ref[attr],
                 'Expected different %s' % attr)
 
     def test_delete(self):

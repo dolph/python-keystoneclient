@@ -46,7 +46,7 @@ class EndpointManager(base.CrudManager):
             endpoint_id=base.getid(endpoint))
 
     def update(self, endpoint, service=None, url=None, name=None,
-            interface=None, region=None):
+               interface=None, region=None):
         return super(EndpointManager, self).update(
             endpoint_id=endpoint,
             service_id=base.getid(service),

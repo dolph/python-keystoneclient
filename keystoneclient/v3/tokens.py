@@ -41,7 +41,7 @@ class TokenManager(base.CrudManager):
     key = 'token'
 
     def authenticate(self, user=None, token=None, user_name=None,
-            password=None, tenant=None, tenant_name=None):
+                     password=None, tenant=None, tenant_name=None):
         user_id = base.getid(user)
         token_id = base.getid(token)
         tenant_id = base.getid(tenant)
@@ -62,7 +62,7 @@ class TokenManager(base.CrudManager):
                 body['auth']['passwordCredentials']['password'] = password
         else:
             raise Exception('Insufficient credentials provided, missing '
-                'user_id, username or token_id.')
+                            'user_id, username or token_id.')
 
         if tenant_id is not None:
             body['auth']['tenant_id'] = tenant_id
