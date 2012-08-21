@@ -190,7 +190,7 @@ class CrudManager(Manager):
 
         return self._list('%(base_url)s%(query)s' % {
                 'base_url': self.build_url(base_url=base_url, **kwargs),
-                'query': '?' + urllib.urlencode(**kwargs) if kwargs else '',
+                'query': '?%s' % urllib.urlencode(kwargs) if kwargs else '',
             },
             self.collection_key)
 
