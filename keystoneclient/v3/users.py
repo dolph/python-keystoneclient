@@ -68,8 +68,3 @@ class UserManager(base.CrudManager):
     def delete(self, user):
         return super(UserManager, self).delete(
             user_id=base.getid(user))
-
-    def list_projects(self, user=None):
-        return super(UserManager, self).list(
-            sub_collection_key='projects',
-            user_id=base.getid(user))
