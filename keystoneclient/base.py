@@ -80,6 +80,10 @@ class Manager(object):
         resp, body = self.api.get(url)
         return self.resource_class(self, body[response_key], loaded=True)
 
+    def _head(self, url):
+        resp, body = self.api.head(url)
+        return resp.status == 204
+
     def _create(self, url, body, response_key, return_raw=False):
         resp, body = self.api.post(url, body=body)
         if return_raw:
@@ -89,7 +93,7 @@ class Manager(object):
     def _delete(self, url):
         resp, body = self.api.delete(url)
 
-    def _update(self, url, body, response_key=None, method="PUT"):
+    def _update(self, url, body=None, response_key=None, method="PUT"):
         methods = {"PUT": self.api.put,
                    "POST": self.api.post,
                    "PATCH": self.api.patch}
@@ -185,6 +189,10 @@ class CrudManager(Manager):
             self.build_url(**kwargs),
             self.key)
 
+    def head(self, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+        return self._head(self.build_url(**kwargs))
+
     def list(self, base_url=None, **kwargs):
         kwargs = self._filter_kwargs(kwargs)
 
@@ -193,6 +201,13 @@ class CrudManager(Manager):
                 'query': '?%s' % urllib.urlencode(kwargs) if kwargs else '',
             },
             self.collection_key)
+
+    def put(self, base_url=None, **kwargs):
+        kwargs = self._filter_kwargs(kwargs)
+
+        return self._update(
+            self.build_url(base_url=base_url, **kwargs),
+            method='PUT')
 
     def update(self, **kwargs):
         kwargs = self._filter_kwargs(kwargs)

@@ -174,6 +174,9 @@ class HTTPClient(httplib2.Http):
     def get(self, url, **kwargs):
         return self._cs_request(url, 'GET', **kwargs)
 
+    def head(self, url, **kwargs):
+        return self._cs_request(url, 'HEAD', **kwargs)
+
     def post(self, url, **kwargs):
         return self._cs_request(url, 'POST', **kwargs)
 
